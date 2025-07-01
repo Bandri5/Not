@@ -1,91 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Panel - Schedule Notification</title>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <title>Admin Panel - Notification Scheduler</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
-    h1 { color: #333; }
-    input, textarea { width: 100%; padding: 10px; margin: 5px 0 15px; }
-    button { padding: 10px 20px; }
-    #result { margin-top: 10px; font-weight: bold; }
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    form input, form textarea {
+      display: block;
+      margin-bottom: 10px;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      display: block;
+      margin: 10px auto;
+    }
+    #output {
+      background: #fff;
+      padding: 10px;
+      white-space: pre-wrap;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
-  <h1>Schedule Match Notification</h1>
-  <form id="notifForm">
-    <label>Title:</label>
-    <input type="text" id="title" required />
-
-    <label>Message:</label>
-    <textarea id="message" required></textarea>
-
-    <label>Image URL:</label>
-    <input type="text" id="image" required />
-
-    <label>Time (YYYY-MM-DD HH:MM):</label>
-    <input type="text" id="time" required />
-
-    <button type="submit">Save</button>
+  <h1>Notification Scheduler</h1>
+  <form id="notificationForm">
+    <input type="text" id="title" placeholder="Title" required>
+    <textarea id="message" placeholder="Message" required></textarea>
+    <input type="text" id="image" placeholder="Image URL (optional)">
+    <input type="datetime-local" id="time" required>
+    <button type="submit">Add Notification</button>
   </form>
 
-  <p id="result"></p>
+  <h2>Preview</h2>
+  <pre id="output">[]</pre>
+
+  <button onclick="downloadJSON()">Download JSON</button>
 
   <script>
-    const form = document.getElementById('notifForm');
-    const result = document.getElementById('result');
+    let notifications = [];
 
-    form.addEventListener('submit', async function(e) {
+    const form = document.getElementById('notificationForm');
+    const output = document.getElementById('output');
+
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
 
-      const payload = [{
-        title: document.getElementById('title').value,
-        message: document.getElementById('message').value,
-        image: document.getElementById('image').value,
-        time: document.getElementById('time').value
-      }];
+      const title = document.getElementById('title').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const image = document.getElementById('image').value.trim();
+      const time = document.getElementById('time').value;
 
-      const githubToken = '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'; // 🛑 Replace this
-      const username = 'Bandri5';        // 🛑 Replace this
-      const repo = 'Not';           // 🛑 Replace this
-      const filePath = 'notifications.json';
-
-      const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
-
-      try {
-        const getResp = await fetch(apiUrl, {
-          headers: {
-            'Authorization': `token ${githubToken}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-
-        const { sha } = await getResp.json();
-
-        const response = await fetch(apiUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${githubToken}`,
-            'Accept': 'application/vnd.github.v3+json'
-          },
-          body: JSON.stringify({
-            message: 'Updated notification',
-            content: btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2)))),
-            sha: sha
-          })
-        });
-
-        if (response.ok) {
-          result.innerText = "✅ Notification scheduled!";
-          form.reset();
-        } else {
-          const data = await response.json();
-          result.innerText = "❌ Error: " + (data.message || "Unknown error");
-        }
-      } catch (err) {
-        result.innerText = "❌ Failed: " + err.message;
+      if (!title || !message || !time) {
+        alert('Please fill all required fields');
+        return;
       }
+
+      notifications.push({ title, message, image, time });
+      updateOutput();
+      form.reset();
     });
+
+    function updateOutput() {
+      output.textContent = JSON.stringify(notifications, null, 2);
+    }
+
+    function downloadJSON() {
+      if (notifications.length === 0) {
+        alert("No notifications to download.");
+        return;
+      }
+
+      const blob = new Blob([JSON.stringify(notifications, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'notification.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   </script>
 </body>
 </html>
