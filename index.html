@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel - Schedule Notification</title>
+  <meta charset="UTF-8" />
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+    h1 { color: #333; }
+    input, textarea { width: 100%; padding: 10px; margin: 5px 0 15px; }
+    button { padding: 10px 20px; }
+    #result { margin-top: 10px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Schedule Match Notification</h1>
+  <form id="notifForm">
+    <label>Title:</label>
+    <input type="text" id="title" required />
+
+    <label>Message:</label>
+    <textarea id="message" required></textarea>
+
+    <label>Image URL:</label>
+    <input type="text" id="image" required />
+
+    <label>Time (YYYY-MM-DD HH:MM):</label>
+    <input type="text" id="time" required />
+
+    <button type="submit">Save</button>
+  </form>
+
+  <p id="result"></p>
+
+  <script>
+    const form = document.getElementById('notifForm');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const payload = [{
+        title: document.getElementById('title').value,
+        message: document.getElementById('message').value,
+        image: document.getElementById('image').value,
+        time: document.getElementById('time').value
+      }];
+
+      const githubToken = 'YOUR_GITHUB_TOKEN'; // 🛑 Replace this
+      const username = 'YOUR_USERNAME';        // 🛑 Replace this
+      const repo = 'YOUR_REPO_NAME';           // 🛑 Replace this
+      const filePath = 'notifications.json';
+
+      const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${filePath}`;
+
+      try {
+        const getResp = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        const { sha } = await getResp.json();
+
+        const response = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          },
+          body: JSON.stringify({
+            message: 'Updated notification',
+            content: btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2)))),
+            sha: sha
+          })
+        });
+
+        if (response.ok) {
+          result.innerText = "✅ Notification scheduled!";
+          form.reset();
+        } else {
+          const data = await response.json();
+          result.innerText = "❌ Error: " + (data.message || "Unknown error");
+        }
+      } catch (err) {
+        result.innerText = "❌ Failed: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
