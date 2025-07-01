@@ -1,14 +1,14 @@
 [
   {
-    "title": "Live Match Today",
-    "message": "India vs Australia at 7:00 PM",
-    "image": "https://example.com/match-image.jpg",
-    "time": "2025-07-01 19:00"
+    "title": "India vs Pakistan Live",
+    "message": "Watch now!",
+    "time": "14:30",
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-hVRp5E4HQOYAMQYQOFD40owRxxrRGC_8tnOH8j231LKdRmnTyPqdaVxm5GFXfx3SAII&usqp=CAU"
   },
   {
-    "title": "Match Reminder",
-    "message": "Don't miss the live match!",
-    "image": "https://example.com/reminder.jpg",
-    "time": "2025-07-01 18:55"
+    "title": "Match Starts Soon",
+    "message": "Don’t miss the toss at 6:30PM!",
+    "time": "14:27",
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-hVRp5E4HQOYAMQYQOFD40owRxxrRGC_8tnOH8j231LKdRmnTyPqdaVxm5GFXfx3SAII&usqp=CAU"
   }
 ]
