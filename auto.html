@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel - Auto GitHub Upload</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; max-width: 600px; margin: auto; }
+    h1, h2 { text-align: center; }
+    form input, form textarea { display: block; margin-bottom: 10px; width: 100%; padding: 10px; font-size: 16px; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; display: block; margin: 10px auto; }
+    #output { background: #fff; padding: 10px; white-space: pre-wrap; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>📢 Notification Scheduler</h1>
+
+  <form id="notificationForm">
+    <input type="text" id="title" placeholder="Title" required>
+    <textarea id="message" placeholder="Message" required></textarea>
+    <input type="text" id="image" placeholder="Image URL (optional)">
+    <input type="datetime-local" id="time" required>
+    <button type="submit">Add + Upload to GitHub</button>
+  </form>
+
+  <h2>Preview</h2>
+  <pre id="output">[]</pre>
+
+  <script>
+    const repo = "bandri5/Not"; // your repo
+    const filePath = "notification.json"; // path to file
+    const token = "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"; // <<< paste your GitHub token here
+
+    let notifications = [];
+    let sha = "";
+
+    async function fetchExistingJSON() {
+      const res = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`);
+      const json = await res.json();
+      if (json.content) {
+        const content = atob(json.content);
+        notifications = JSON.parse(content);
+        sha = json.sha;
+        updateOutput();
+      }
+    }
+
+    function updateOutput() {
+      document.getElementById("output").textContent = JSON.stringify(notifications, null, 2);
+    }
+
+    document.getElementById("notificationForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const title = document.getElementById("title").value.trim();
+      const message = document.getElementById("message").value.trim();
+      const image = document.getElementById("image").value.trim();
+      const time = document.getElementById("time").value;
+
+      if (!title || !message || !time) {
+        alert("Please fill all fields");
+        return;
+      }
+
+      notifications.push({ title, message, image, time });
+      updateOutput();
+
+      const newContent = btoa(unescape(encodeURIComponent(JSON.stringify(notifications, null, 2))));
+
+      const res = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `token ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: "Auto-update notification.json",
+          content: newContent,
+          sha: sha
+        })
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert("✅ Notification uploaded to GitHub!");
+        sha = result.content.sha;
+        document.getElementById("notificationForm").reset();
+      } else {
+        alert("❌ Upload failed: " + (result.message || "Check token or repo path."));
+        console.error(result);
+      }
+    });
+
+    fetchExistingJSON();
+  </script>
+</body>
+</html>
